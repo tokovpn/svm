@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Klasifikasi Email Spam dengan SVM</title>
+<style>
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    margin: 0; padding: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .container {
+    background: rgba(0,0,0, 0.6);
+    padding: 1.5rem;
+    border-radius: 12px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  }
+  h1 {
+    text-align: center;
+    margin-bottom: 1rem;
+    font-weight: 700;
+  }
+  textarea {
+    width: 100%;
+    min-height: 140px;
+    border-radius: 8px;
+    border: none;
+    padding: 0.75rem;
+    resize: vertical;
+    font-size: 1rem;
+  }
+  button {
+    margin-top: 1rem;
+    width: 100%;
+    background: #ff6b6b;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 1.2rem;
+    padding: 0.75rem;
+    cursor: pointer;
+    font-weight: 700;
+    transition: background-color 0.3s ease;
+  }
+  button:hover,
+  button:focus {
+    background: #ff4757;
+    outline: none;
+  }
+  .hasil {
+    margin-top: 1rem;
+    text-align: center;
+    font-size: 1.3rem;
+    font-weight: 700;
+    white-space: pre-line;
+  }
+  .hasil.spam {
+    color: #ff6b6b;
+  }
+  .hasil.bukan-spam {
+    color: #2ed573;
+  }
+  @media (max-width: 400px) {
+    .container {
+      padding: 1rem;
+      max-width: 100%;
+    }
+    textarea {
+      font-size: 0.9rem;
+    }
+    button {
+      font-size: 1rem;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="container" role="main">
+    <h1>Klasifikasi Email Spam dengan SVM</h1>
+    <form id="formEmail" aria-label="Form klasifikasi email spam">
+      <label for="emailInput" style="display:none">Isi email yang akan diuji</label>
+      <textarea id="emailInput" name="email" placeholder="Tempel isi email di sini..." required aria-required="true" aria-describedby="petunjuk"></textarea>
+      <div id="petunjuk" style="font-size: 0.85rem; margin-top: 0.5rem; color: #ccc;">
+        Masukkan teks email untuk memeriksa apakah spam atau bukan. Sistem akan menampilkan persentase probabilitas spam.
+      </div>
+      <button type="submit">Periksa Spam</button>
+    </form>
+    <div id="hasil" role="alert" aria-live="polite" class="hasil"></div>
+  </div>
+
+<script>
+  const form = document.getElementById('formEmail');
+  const hasilDiv = document.getElementById('hasil');
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    hasilDiv.textContent = 'Memeriksa...';
+    hasilDiv.className = 'hasil';
+    const formData = new FormData(form);
+    const teksEmail = formData.get('email').trim();
+    if (!teksEmail) {
+      hasilDiv.textContent = 'Mohon masukkan isi email terlebih dahulu.';
+      return;
+    }
+    try {
+      const response = await fetch('/klasifikasi', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: new URLSearchParams({ email: teksEmail })
+      });
+      const data = await response.json();
+      if(data.classification === 'Spam'){
+        hasilDiv.textContent = `🚫 Terdeteksi sebagai Spam\nProbabilitas Spam: ${data.confidence}%`;
+        hasilDiv.classList.add('spam');
+      } else {
+        hasilDiv.textContent = `✅ Terdeteksi sebagai Bukan Spam\nProbabilitas Spam: ${data.confidence}%`;
+        hasilDiv.classList.add('bukan-spam');
+      }
+    } catch {
+      hasilDiv.textContent = 'Terjadi kesalahan saat memeriksa email. Silakan coba lagi.';
+    }
+  });
+</script>
+</body>
+</html>
+
